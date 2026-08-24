@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Set Log</title>
+<style>
+  :root{
+    --bg:#0E1116;
+    --card:#171D26;
+    --card2:#1F2733;
+    --line:#2B3542;
+    --txt:#EDF1F6;
+    --dim:#7C8797;
+    --gold:#E8B33A;
+    --good:#4BBF8A;
+    --red:#E86A5A;
+    --pad:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
+    overscroll-behavior-y:contain;
+  }
+  button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer;}
+  .hide{display:none !important;}
+
+  header{
+    position:sticky;top:0;z-index:20;
+    background:rgba(14,17,22,.94);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:calc(10px + env(safe-area-inset-top)) var(--pad) 0;
+  }
+  .htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .htop h1{font-size:17px;font-weight:800;letter-spacing:2px;margin:0;text-transform:uppercase;}
+  .dateset{display:flex;align-items:center;gap:4px;}
+  .nudge{
+    width:30px;height:30px;border-radius:8px;background:var(--card);
+    color:var(--dim);font-size:14px;font-weight:800;flex:0 0 auto;
+  }
+  .nudge:disabled{opacity:.3;}
+  .datebtn{
+    position:relative;overflow:hidden;
+    font-size:12px;color:var(--dim);letter-spacing:.5px;font-weight:700;
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;
+    white-space:nowrap;
+  }
+  .datebtn.shift{color:var(--gold);border-color:var(--gold);}
+  .datebtn input{
+    position:absolute;inset:0;width:100%;height:100%;
+    opacity:0;border:none;padding:0;cursor:pointer;
+  }
+  .days{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;}
+  .days::-webkit-scrollbar{display:none;}
+  .dbtn{
+    flex:0 0 auto;padding:8px 14px;border-radius:999px;
+    background:var(--card);font-size:13px;font-weight:700;color:var(--dim);
+    letter-spacing:.5px;white-space:nowrap;border:1px solid transparent;
+  }
+  .dbtn.on{background:var(--gold);color:#141821;}
+  .dbtn.today:not(.on){border-color:var(--gold);color:var(--gold);}
+
+  main{padding:var(--pad);}
+  .dayttl{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:4px 0 4px;}
+  .daysub{font-size:13px;color:var(--dim);margin-bottom:14px;}
+  .banner{
+    background:rgba(232,179,58,.13);border:1px solid rgba(232,179,58,.4);
+    color:var(--gold);border-radius:11px;padding:10px 12px;
+    font-size:12.5px;line-height:1.5;margin-bottom:14px;font-weight:600;
+  }
+
+  .ex{background:var(--card);border-radius:14px;margin-bottom:10px;overflow:hidden;border:1px solid transparent;}
+  .ex.done{border-color:rgba(75,191,138,.45);}
+  .exhead{display:flex;align-items:center;gap:12px;padding:14px;width:100%;text-align:left;}
+  .exname{flex:1;min-width:0;}
+  .exname b{display:block;font-size:15px;font-weight:700;line-height:1.25;}
+  .exname i{display:block;font-style:normal;font-size:12px;color:var(--dim);margin-top:3px;}
+  .dots{display:flex;gap:4px;flex:0 0 auto;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .dot.f{background:var(--good);}
+  .chev{color:var(--dim);font-size:13px;flex:0 0 auto;}
+
+  .sets{padding:0 12px 12px;}
+  .srow{display:flex;align-items:center;gap:8px;background:var(--card2);border-radius:11px;padding:9px 10px;margin-bottom:8px;}
+  .srow.logged{background:rgba(75,191,138,.11);}
+  .snum{width:20px;font-size:12px;font-weight:800;color:var(--dim);flex:0 0 auto;}
+  .fld{flex:1;display:flex;align-items:center;gap:2px;min-width:0;}
+  .step{width:34px;height:38px;border-radius:9px;background:#0E1116;font-size:19px;font-weight:600;color:var(--dim);flex:0 0 auto;}
+  .step:active{background:var(--gold);color:#141821;}
+  .val{
+    flex:1;min-width:0;height:38px;border:none;background:transparent;
+    color:var(--txt);font-size:17px;font-weight:800;text-align:center;
+    font-variant-numeric:tabular-nums;padding:0;-moz-appearance:textfield;
+  }
+  .val::-webkit-outer-spin-button,.val::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .val:focus{outline:none;color:var(--gold);}
+  .unit{font-size:10px;color:var(--dim);letter-spacing:.5px;flex:0 0 auto;width:22px;}
+  .ok{width:44px;height:38px;border-radius:9px;background:#0E1116;color:var(--dim);font-size:17px;font-weight:700;flex:0 0 auto;}
+  .ok.save{background:var(--gold);color:#141821;}
+
+  .doneval{
+    flex:1;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;
+    color:var(--txt);letter-spacing:.3px;
+  }
+  .doneval em{font-style:normal;font-size:11px;color:var(--dim);font-weight:600;margin-left:3px;}
+  .mini{width:38px;height:38px;border-radius:9px;background:#0E1116;font-size:15px;color:var(--dim);flex:0 0 auto;}
+  .mini.del{color:var(--red);font-size:20px;}
+
+  .addset{width:100%;padding:9px;border-radius:10px;border:1px dashed var(--line);color:var(--dim);font-size:13px;font-weight:600;}
+
+  .rest{
+    position:fixed;left:var(--pad);right:var(--pad);
+    bottom:calc(78px + env(safe-area-inset-bottom) + 8px);
+    background:var(--gold);color:#141821;border-radius:12px;
+    padding:11px 14px;display:flex;align-items:center;justify-content:space-between;
+    font-weight:800;font-size:14px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .rest button{font-size:13px;font-weight:800;opacity:.65;}
+
+  .pcard{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;}
+  .pcard h3{margin:0 0 3px;font-size:15px;font-weight:700;}
+  .pmeta{font-size:12px;color:var(--dim);margin-bottom:12px;}
+  .bar{display:flex;align-items:flex-end;gap:4px;height:56px;margin-bottom:8px;}
+  .bar div{flex:1;background:var(--line);border-radius:3px 3px 0 0;min-height:3px;}
+  .bar div:last-child{background:var(--gold);}
+  .hist{font-size:12px;color:var(--dim);line-height:1.7;font-variant-numeric:tabular-nums;}
+  .hist b{color:var(--txt);font-weight:700;}
+  .empty{color:var(--dim);font-size:14px;text-align:center;padding:40px 20px;line-height:1.6;}
+
+  .tools{display:flex;flex-direction:column;gap:10px;}
+  .tool{background:var(--card);border-radius:12px;padding:14px;text-align:left;font-size:14px;font-weight:700;width:100%;}
+  .tool i{display:block;font-style:normal;font-size:12px;color:var(--dim);font-weight:400;margin-top:3px;}
+
+  nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:rgba(14,17,22,.96);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{flex:1;padding:11px 0 13px;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--dim);}
+  nav button em{display:block;font-style:normal;font-size:19px;margin-bottom:2px;}
+  nav button.on{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="htop">
+    <h1>Set Log</h1>
+    <div class="dateset">
+      <button class="nudge" onclick="nudge(-1)">&#8249;</button>
+      <div class="datebtn" id="datebtn">
+        <span id="datelbl"></span>
+        <input type="date" id="dateIn" onchange="setDate(this.value)">
+      </div>
+      <button class="nudge" id="fwd" onclick="nudge(1)">&#8250;</button>
+    </div>
+  </div>
+  <div class="days" id="days"></div>
+</header>
+
+<main>
+  <section id="v-log"></section>
+  <section id="v-prog" class="hide"></section>
+  <section id="v-data" class="hide">
+    <div class="dayttl">Data</div>
+    <div class="daysub">Everything is stored on this phone only. Back it up before clearing your browser.</div>
+    <div class="tools">
+      <button class="tool" onclick="exportData()">Export backup<i>Downloads a JSON file of every set you've logged</i></button>
+      <button class="tool" onclick="importData()">Restore backup<i>Loads a JSON file and replaces current history</i></button>
+      <button class="tool" onclick="undoLast()">Undo last set<i id="undolbl">Nothing logged yet</i></button>
+      <button class="tool" onclick="wipe()" style="color:var(--red)">Erase all history<i>Cannot be undone</i></button>
+    </div>
+    <input type="file" id="fileIn" accept="application/json" class="hide">
+  </section>
+</main>
+
+<div id="rest" class="rest hide">
+  <span>Rest <b id="rtime">2:00</b></span>
+  <button onclick="stopRest()">Skip</button>
+</div>
+
+<nav>
+  <button id="n-log" class="on" onclick="go('log')"><em>&#9632;</em>LOG</button>
+  <button id="n-prog" onclick="go('prog')"><em>&#9650;</em>PROGRESS</button>
+  <button id="n-data" onclick="go('data')"><em>&#9679;</em>DATA</button>
+</nav>
+
+<script>
+/* ---------- program ---------- */
+const PROGRAM = {
+  mon:{title:"Chest & Triceps", ex:[
+    ["Flat Bench Press (DB)",3,2.5,50,10],
+    ["Incline DB Press",3,2.5,15,10],
+    ["Chest Flys (machine)",3,5,60,12],
+    ["Overhead DB Press",3,2.5,15,12],
+    ["Lateral Raises",3,1,8,12],
+    ["Close-Grip Bench Press",3,2.5,20,10],
+    ["Skull Crushers",3,1,9,12],
+    ["Tricep Rope Pulldown",3,2,12,12]
+  ]},
+  tue:{title:"Legs — Quads", ex:[
+    ["Leg Extension",4,5,75,12],
+    ["Smith Machine Squat",3,5,20,10],
+    ["Leg Press",3,10,120,10],
+    ["Adduction",3,5,45,12],
+    ["Abduction",3,5,45,12]
+  ]},
+  wed:{title:"Back & Biceps", ex:[
+    ["Lat Pulldown (wide)",3,3,36,12],
+    ["Wide T-Bar Rows",3,2.5,25,10],
+    ["Machine Seated Rows",3,5,30,12],
+    ["Reverse Flys (machine)",3,5,55,12],
+    ["Face Pulls",3,2,12,12],
+    ["Hammer Curls",3,1,10,12],
+    ["Incline DB Curls",3,1,10,12],
+    ["Standing EZ-Bar Curl",3,2.5,10,12]
+  ]},
+  fri:{title:"Cardio", ex:[
+    ["Walk / Run — minutes",1,5,60,1]
+  ]},
+  sat:{title:"Legs — Glutes & Hams", ex:[
+    ["Leg Curl",4,10,80,12],
+    ["Stiff-Leg Deadlift",3,5,40,12],
+    ["Hip Thrust",3,10,100,10],
+    ["Calves",3,5,30,10],
+    ["Adduction",3,5,45,12],
+    ["Abduction",3,5,45,12]
+  ]}
+};
+const DAYS=[["mon","MON"],["tue","TUE"],["wed","WED"],["thu","THU"],["fri","FRI"],["sat","SAT"],["sun","SUN"]];
+const KEY="setlog_v1";
+
+/* ---------- storage ---------- */
+let mem=null;
+function load(){
+  if(mem) return mem;
+  try{ mem=JSON.parse(localStorage.getItem(KEY))||{log:[]}; }
+  catch(e){ mem={log:[]}; }
+  if(!mem.log) mem.log=[];
+  return mem;
+}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(mem)); }catch(e){} }
+
+function iso(d){ return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
+const today=()=>iso(new Date());
+const dkey=d=>DAYS[(d.getDay()+6)%7][0];
+function pretty(s){
+  return new Date(s+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+}
+
+let view="log", day=dkey(new Date()), logDate=today(), open=null, draft={}, editing={};
+
+/* ---------- history helpers ---------- */
+function sessions(ex){
+  const by={};
+  load().log.filter(e=>e.ex===ex).forEach(e=>{ (by[e.d]=by[e.d]||[]).push(e); });
+  return Object.keys(by).sort().map(d=>({d,sets:by[d]}));
+}
+function lastSession(ex){
+  const s=sessions(ex);
+  for(let i=s.length-1;i>=0;i--) if(s[i].d!==logDate) return s[i];
+  return null;
+}
+function daySets(ex){ return load().log.filter(e=>e.ex===ex&&e.d===logDate); }
+const vol=s=>s.reduce((a,b)=>a+b.w*b.r,0);
+const best=s=>s.reduce((a,b)=>b.w>a.w?b:a,s[0]);
+
+/* ---------- render ---------- */
+function render(){
+  document.getElementById("datelbl").textContent=
+    (logDate===today()?"Today · ":"")+pretty(logDate);
+  document.getElementById("datebtn").classList.toggle("shift",logDate!==today());
+  const inp=document.getElementById("dateIn");
+  inp.value=logDate; inp.max=today();
+  document.getElementById("fwd").disabled=(logDate===today());
+
+  document.getElementById("days").innerHTML=DAYS.map(([k,l])=>
+    `<button class="dbtn ${k===day?"on":""} ${k===dkey(new Date())?"today":""}" onclick="setDay('${k}')">${l}</button>`
+  ).join("");
+
+  if(view==="log") renderLog();
+  if(view==="prog") renderProg();
+  if(view==="data") renderData();
+}
+
+function renderLog(){
+  const p=PROGRAM[day], el=document.getElementById("v-log");
+  if(!p){
+    el.innerHTML=`<div class="dayttl">Rest day</div>
+      <div class="empty">Nothing scheduled here.<br>Moving a session? Tap the workout you're actually doing above.</div>`;
+    return;
+  }
+  const done=p.ex.filter(e=>daySets(e[0]).length>=e[1]).length;
+  let h=`<div class="dayttl">${p.title}</div>
+         <div class="daysub">${done} of ${p.ex.length} exercises complete</div>`;
+
+  if(day!==dkey(new Date()) || logDate!==today()){
+    h+=`<div class="banner">Saving to <b>${pretty(logDate)}</b> — that's the date this session counts as,
+        whichever workout tab you picked. Tap the date up top to change it.</div>`;
+  }
+
+  p.ex.forEach((e,i)=>{
+    const [name,nsets]=e, ts=daySets(name), isOpen=open===i;
+    h+=`<div class="ex ${ts.length>=nsets?"done":""}">
+      <button class="exhead" onclick="toggle(${i})">
+        <div class="exname"><b>${name}</b><i>${lastLabel(name)}</i></div>
+        <div class="dots">${Array.from({length:Math.max(nsets,ts.length)},(_,k)=>
+          `<span class="dot ${k<ts.length?"f":""}"></span>`).join("")}</div>
+        <span class="chev">${isOpen?"&#9650;":"&#9660;"}</span>
+      </button>`;
+    if(isOpen) h+=setRows(i,e,ts);
+    h+=`</div>`;
+  });
+  el.innerHTML=h;
+}
+
+function lastLabel(name){
+  const t=daySets(name);
+  if(t.length) return t.map(s=>`${s.w}×${s.r}`).join("  ");
+  const l=lastSession(name);
+  if(!l) return "No history yet";
+  return "Last ("+l.d.slice(5)+"): "+l.sets.map(s=>`${s.w}×${s.r}`).join("  ");
+}
+
+function setRows(i,e,ts){
+  const [name,nsets,step]=e;
+  const l=lastSession(name);
+  let h=`<div class="sets">`;
+  for(let k=0;k<Math.max(nsets,ts.length);k++){
+    const logged=ts[k], isEdit=editing[name+k];
+
+    if(logged && !isEdit){
+      h+=`<div class="srow logged">
+        <span class="snum">${k+1}</span>
+        <div class="doneval">${logged.w}<em>KG</em> × ${logged.r}<em>REPS</em></div>
+        <button class="mini" onclick="edit('${esc(name)}',${k})">&#9998;</button>
+        <button class="mini del" onclick="delSet('${esc(name)}',${k})">&times;</button>
+      </div>`;
+      continue;
+    }
+
+    const d=draft[name+k]||{};
+    const prev=l&&l.sets[k];
+    const w=logged?logged.w:(d.w!==undefined?d.w:(prev?prev.w:e[3]));
+    const r=logged?logged.r:(d.r!==undefined?d.r:(prev?prev.r:e[4]));
+    h+=`<div class="srow">
+      <span class="snum">${k+1}</span>
+      <div class="fld">
+        <button class="step" onclick="bump('${esc(name)}',${k},'w',${-step},${w},${r})">&minus;</button>
+        <input class="val" type="number" inputmode="decimal" value="${w}"
+          onchange="setV('${esc(name)}',${k},'w',this.value,${r})">
+        <span class="unit">KG</span>
+        <button class="step" onclick="bump('${esc(name)}',${k},'w',${step},${w},${r})">+</button>
+      </div>
+      <div class="fld">
+        <button class="step" onclick="bump('${esc(name)}',${k},'r',-1,${w},${r})">&minus;</button>
+        <input class="val" type="number" inputmode="numeric" value="${r}"
+          onchange="setV('${esc(name)}',${k},'r',this.value,${w})">
+        <span class="unit">REP</span>
+        <button class="step" onclick="bump('${esc(name)}',${k},'r',1,${w},${r})">+</button>
+      </div>
+      <button class="ok ${isEdit?"save":""}" onclick="logSet('${esc(name)}',${k},${w},${r})">${isEdit?"&#10003;":"&#43;"}</button>
+    </div>`;
+  }
+  h+=`<button class="addset" onclick="addSet(${i})">+ Extra set</button></div>`;
+  return h;
+}
+
+function renderProg(){
+  const el=document.getElementById("v-prog");
+  const p=PROGRAM[day];
+  if(!p){ el.innerHTML=`<div class="dayttl">Progress</div><div class="empty">Pick a training day above.</div>`; return; }
+  let h=`<div class="dayttl">Progress</div><div class="daysub">${p.title} · last 8 sessions</div>`;
+  let any=false;
+  p.ex.forEach(e=>{
+    const s=sessions(e[0]); if(!s.length) return;
+    any=true;
+    const recent=s.slice(-8), vols=recent.map(x=>vol(x.sets)), mx=Math.max(...vols,1);
+    const first=recent[0], last=recent[recent.length-1];
+    const bw=best(last.sets).w, bw0=best(first.sets).w, delta=bw-bw0;
+    h+=`<div class="pcard">
+      <h3>${e[0]}</h3>
+      <div class="pmeta">Top set ${bw}kg${delta?` · ${delta>0?"+":""}${delta}kg since ${first.d.slice(5)}`:""}</div>
+      <div class="bar">${vols.map(v=>`<div style="height:${Math.round(v/mx*100)}%"></div>`).join("")}</div>
+      <div class="hist">${recent.slice(-4).reverse().map(x=>
+        `${x.d.slice(5)} &nbsp; <b>${x.sets.map(y=>`${y.w}×${y.r}`).join("  ")}</b>`).join("<br>")}</div>
+    </div>`;
+  });
+  el.innerHTML=h+(any?"":`<div class="empty">No sessions logged for this workout yet.<br>Log some sets and they'll show up here.</div>`);
+}
+
+function renderData(){
+  const n=load().log.length, last=load().log[n-1];
+  document.getElementById("undolbl").textContent=
+    last?`${last.ex} — ${last.w}×${last.r} on ${last.d}`:"Nothing logged yet";
+}
+
+/* ---------- actions ---------- */
+const esc=s=>s.replace(/'/g,"\\'");
+function go(v){ view=v;
+  ["log","prog","data"].forEach(k=>{
+    document.getElementById("v-"+k).classList.toggle("hide",k!==v);
+    document.getElementById("n-"+k).classList.toggle("on",k===v);
+  });
+  render(); window.scrollTo(0,0);
+}
+function setDay(k){ day=k; open=null; editing={}; render(); }
+function toggle(i){ open=open===i?null:i; render(); }
+
+function setDate(v){
+  if(!v || v>today()) return;
+  logDate=v; editing={}; draft={};
+  render();
+}
+function nudge(n){
+  const d=new Date(logDate+"T12:00:00");
+  d.setDate(d.getDate()+n);
+  setDate(iso(d));
+}
+
+function bump(name,k,f,by,w,r){
+  const cur=f==="w"?w:r;
+  let v=Math.round((cur+by)*100)/100;
+  if(v<0) v=0;
+  draft[name+k]={w:f==="w"?v:w, r:f==="r"?v:r};
+  render();
+}
+function setV(name,k,f,val,other){
+  const v=parseFloat(val)||0;
+  draft[name+k]={w:f==="w"?v:other, r:f==="r"?v:other};
+  render();
+}
+
+function logSet(name,k,w,r){
+  const t=daySets(name);
+  if(t[k]){
+    t[k].w=w; t[k].r=r;
+    editing[name+k]=false;
+  }else{
+    mem.log.push({d:logDate,day:day,ex:name,w:w,r:r,t:Date.now()});
+    if(logDate===today()) startRest();
+    if(navigator.vibrate) navigator.vibrate(18);
+  }
+  delete draft[name+k];
+  save(); render();
+}
+function edit(name,k){ editing[name+k]=true; render(); }
+
+function delSet(name,k){
+  const t=daySets(name);
+  if(!t[k]) return;
+  mem.log.splice(load().log.indexOf(t[k]),1);
+  editing={}; draft={};
+  save(); render();
+}
+
+function addSet(i){
+  const e=PROGRAM[day].ex[i];
+  e[1]=Math.max(e[1],daySets(e[0]).length)+1;
+  render();
+}
+function undoLast(){
+  if(!load().log.length) return;
+  mem.log.pop(); save(); render();
+}
+
+/* ---------- rest timer ---------- */
+let rt=null, rleft=0;
+function startRest(){
+  rleft=120; document.getElementById("rest").classList.remove("hide");
+  clearInterval(rt);
+  document.getElementById("rtime").textContent="2:00";
+  rt=setInterval(()=>{
+    rleft--;
+    document.getElementById("rtime").textContent=
+      Math.floor(rleft/60)+":"+String(rleft%60).padStart(2,"0");
+    if(rleft<=0){ stopRest(); if(navigator.vibrate) navigator.vibrate([200,80,200]); }
+  },1000);
+}
+function stopRest(){ clearInterval(rt); document.getElementById("rest").classList.add("hide"); }
+
+/* ---------- data ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(load(),null,1)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="setlog-"+today()+".json";
+  a.click();
+}
+function importData(){
+  const inp=document.getElementById("fileIn");
+  inp.onchange=()=>{
+    const f=inp.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        const j=JSON.parse(rd.result);
+        if(!j.log) throw 0;
+        mem=j; save(); render();
+        alert("Restored "+j.log.length+" sets.");
+      }catch(e){ alert("That file isn't a Set Log backup."); }
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+}
+function wipe(){
+  if(confirm("Erase every set you've logged? Export a backup first if you want to keep it.")){
+    mem={log:[]}; save(); render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
