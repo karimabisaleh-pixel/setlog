@@ -236,12 +236,17 @@ const PROGRAM = {
 };
 const DAYS=[["mon","MON"],["tue","TUE"],["wed","WED"],["thu","THU"],["fri","FRI"],["sat","SAT"],["sun","SUN"]];
 const KEY="setlog_v1";
+  const SEED_DATA={"log":[{"d":"2026-08-17","day":"mon","ex":"Flat Bench Press (DB)","w":50,"r":10,"t":1786982234854},{"d":"2026-08-17","day":"mon","ex":"Flat Bench Press (DB)","w":55,"r":9,"t":1786982440195},{"d":"2026-08-17","day":"mon","ex":"Flat Bench Press (DB)","w":55,"r":4,"t":1786982684457},{"d":"2026-08-17","day":"mon","ex":"Tricep Rope Pulldown","w":28,"r":12,"t":1786982926114},{"d":"2026-08-17","day":"mon","ex":"Tricep Rope Pulldown","w":32,"r":12,"t":1786983098421},{"d":"2026-08-17","day":"mon","ex":"Tricep Rope Pulldown","w":36,"r":10,"t":1786983249696},{"d":"2026-08-17","day":"mon","ex":"Overhead DB Press","w":15,"r":10,"t":1786983496801},{"d":"2026-08-17","day":"mon","ex":"Overhead DB Press","w":17.5,"r":5,"t":1786983697284},{"d":"2026-08-17","day":"mon","ex":"Overhead DB Press","w":15,"r":8,"t":1786983885366},{"d":"2026-08-17","day":"mon","ex":"Incline DB Press","w":15,"r":9,"t":1786984060553},{"d":"2026-08-17","day":"mon","ex":"Incline DB Press","w":15,"r":10,"t":1786984262837},{"d":"2026-08-17","day":"mon","ex":"Incline DB Press","w":17.5,"r":7,"t":1786984486852},{"d":"2026-08-17","day":"mon","ex":"Skull Crushers","w":7,"r":12,"t":1786984677392},{"d":"2026-08-17","day":"mon","ex":"Skull Crushers","w":8,"r":8,"t":1786984871545},{"d":"2026-08-17","day":"mon","ex":"Skull Crushers","w":9,"r":7,"t":1786985213343},{"d":"2026-08-17","day":"mon","ex":"Chest Flys (machine)","w":45,"r":12,"t":1786985438929},{"d":"2026-08-17","day":"mon","ex":"Chest Flys (machine)","w":50,"r":12,"t":1786985606177},{"d":"2026-08-17","day":"mon","ex":"Chest Flys (machine)","w":60,"r":11,"t":1786985798280},{"d":"2026-08-17","day":"mon","ex":"Lateral Raises","w":10,"r":12,"t":1786985959912},{"d":"2026-08-17","day":"mon","ex":"Lateral Raises","w":15,"r":8,"t":1786986119789},{"d":"2026-08-17","day":"mon","ex":"Lateral Raises","w":12,"r":12,"t":1786986442671},{"d":"2026-08-17","day":"mon","ex":"Close-Grip Bench Press","w":40,"r":12,"t":1786986751699},{"d":"2026-08-17","day":"mon","ex":"Close-Grip Bench Press","w":40,"r":10,"t":1786986972262},{"d":"2026-08-17","day":"mon","ex":"Close-Grip Bench Press","w":40,"r":10,"t":1786987300706}]};
 
 /* ---------- storage ---------- */
 let mem=null;
 function load(){
   if(mem) return mem;
-  try{ mem=JSON.parse(localStorage.getItem(KEY))||{log:[]}; }
+  try{
+    const stored=localStorage.getItem(KEY);
+    if(stored!==null){ mem=JSON.parse(stored); }
+    else { mem=JSON.parse(JSON.stringify(SEED_DATA)); save(); }
+  }
   catch(e){ mem={log:[]}; }
   if(!mem.log) mem.log=[];
   return mem;
